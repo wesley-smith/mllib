@@ -10,7 +10,7 @@ import numpy as np
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import learning_curve, validation_curve
 
-from helpers import timing_curve
+from .helpers import timing_curve
 
 
 def plot_means_w_stds(means, stds, xrange, series_labels=None, ylabel=None, xlabel=None, legend=True, linestyles=None, title=None, ylim=None, logx=False, legend_kwargs={}, fig_kwargs={}, markersize=None):
