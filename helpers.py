@@ -1,7 +1,8 @@
-from collections import defaultdict
+from collections import defaultdict, Counter
 from datetime import datetime
 import os
 from pathlib import Path
+import pickle
 from time import clock
 
 import numpy as np
@@ -12,6 +13,27 @@ from sklearn.externals import joblib
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import make_scorer, accuracy_score
 from sklearn.utils import compute_sample_weight
+
+
+def save_cluster_result(results, dataset, algorithm):
+    filepath = 'results/%s_%s.pkl' % (dataset, algorithm)
+    save_to_file(results, filepath)
+
+
+def load_cluster_result(dataset, algorithm):
+    filepath = 'results/%s_%s.pkl' % (dataset, algorithm)
+    return load_from_file(filepath)
+
+
+def save_to_file(obj, filepath):
+    with open(filepath, 'wb') as fp:
+        pickle.dump(obj, fp, protocol=pickle.HIGHEST_PROTOCOL)
+
+
+def load_from_file(filepath):
+    with open(filepath, 'rb') as fp:
+        result = pickle.load(fp)
+    return result
 
 
 def save_search_result(search_obj, dataset, estimator_type, results_dir='./results/', extras=''):
@@ -129,3 +151,16 @@ def save_timing_curve(timing_df, dataset, estimator_type, results_dir='./results
     filename = 'timing_%s_%s_%s_%s' % (dataset, estimator_type, date, extras)
     path = Path(results_dir + filename + '.pkl')
     joblib.dump(timing_df, path)
+
+
+def cluster_acc(Y,clusterLabels):
+    assert (Y.shape == clusterLabels.shape)
+    pred = np.empty_like(Y)
+    for label in set(clusterLabels):
+        mask = clusterLabels == label
+        sub = Y[mask]
+        target = Counter(sub).most_common(1)[0][0]
+        pred[mask] = target
+#    assert max(pred) == max(Y)
+#    assert min(pred) == min(Y)
+    return accuracy_score(Y,pred)
