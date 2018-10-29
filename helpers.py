@@ -5,6 +5,11 @@ from pathlib import Path
 import pickle
 from time import clock
 
+from keras.layers import Dense
+from keras.models import Sequential
+from keras.optimizers import SGD
+from keras.utils.training_utils import multi_gpu_model
+from keras.wrappers.scikit_learn import KerasClassifier
 import numpy as np
 import pandas as pd
 from pytz import timezone
@@ -13,6 +18,33 @@ from sklearn.externals import joblib
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import make_scorer, accuracy_score
 from sklearn.utils import compute_sample_weight
+
+
+# Keras NN features
+def build_keras_clf(n_input_features, hidden_layer_sizes=(10, 10), learning_rate_init=0.01, momentum=0.8, n_gpus=0):
+    """This function builds a Keras model for use with scikit's GridSearch"""
+    if not isinstance(hidden_layer_sizes, tuple):
+        hidden_layer_sizes = (hidden_layer_sizes,)
+
+    model = Sequential()
+
+    model.add(Dense(units=n_input_features, input_shape=(n_input_features,), activation='relu'))
+
+    for layer_size in hidden_layer_sizes:
+        assert layer_size > 0
+        model.add(Dense(units=layer_size, activation='relu'))
+
+    # Add output layer
+    model.add(Dense(units=1, activation='sigmoid'))
+
+    # Set the number of GPUs
+    if n_gpus > 0:
+        model = multi_gpu_model(model, gpus=n_gpus)
+
+    sgd = SGD(lr=learning_rate_init, momentum=momentum, nesterov=True)
+    model.compile(loss='mean_squared_error', optimizer=sgd, metrics=["accuracy"])
+
+    return model
 
 
 def save_cluster_result(results, dataset, algorithm):
