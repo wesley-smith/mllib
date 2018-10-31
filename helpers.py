@@ -9,7 +9,6 @@ from keras.layers import Dense
 from keras.models import Sequential
 from keras.optimizers import SGD
 from keras.utils.training_utils import multi_gpu_model
-from keras.wrappers.scikit_learn import KerasClassifier
 import numpy as np
 import pandas as pd
 from pytz import timezone
@@ -21,7 +20,7 @@ from sklearn.utils import compute_sample_weight
 
 
 # Keras NN features
-def build_keras_clf(n_input_features, hidden_layer_sizes=(10, 10), learning_rate_init=0.01, momentum=0.8, n_gpus=0):
+def build_keras_clf(n_input_features=1, hidden_layer_sizes=(10, 10), learning_rate_init=0.01, momentum=0.8, n_gpus=0):
     """This function builds a Keras model for use with scikit's GridSearch"""
     if not isinstance(hidden_layer_sizes, tuple):
         hidden_layer_sizes = (hidden_layer_sizes,)
@@ -38,7 +37,7 @@ def build_keras_clf(n_input_features, hidden_layer_sizes=(10, 10), learning_rate
     model.add(Dense(units=1, activation='sigmoid'))
 
     # Set the number of GPUs
-    if n_gpus > 0:
+    if n_gpus > 1:
         model = multi_gpu_model(model, gpus=n_gpus)
 
     sgd = SGD(lr=learning_rate_init, momentum=momentum, nesterov=True)
@@ -47,13 +46,16 @@ def build_keras_clf(n_input_features, hidden_layer_sizes=(10, 10), learning_rate
     return model
 
 
-def save_cluster_result(results, dataset, algorithm):
-    filepath = 'results/%s_%s.pkl' % (dataset, algorithm)
+def save_cluster_result(results, dataset, algorithm, extras=''):
+    filepath = 'results/%s_%s_%s.pkl' % (dataset, algorithm, extras)
     save_to_file(results, filepath)
 
 
-def load_cluster_result(dataset, algorithm):
-    filepath = 'results/%s_%s.pkl' % (dataset, algorithm)
+def load_cluster_result(dataset, algorithm, extras=None):
+    if extras:
+        filepath = 'results/%s_%s_%s.pkl' % (dataset, algorithm, extras)
+    else:
+        filepath = 'results/%s_%s.pkl' % (dataset, algorithm)
     return load_from_file(filepath)
 
 
